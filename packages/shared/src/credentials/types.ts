@@ -2,15 +2,13 @@
  * Credential Storage Types
  *
  * Defines the types for secure credential storage using AES-256-GCM encryption.
- * Supports global, workspace-scoped, and source-scoped credentials.
+ * Supports global and source-scoped credentials.
  *
- * Credential key naming (workspace-scoped):
- *   Format: "{type}::{scope...}"
+ * Credential key format: "{type}::{scope...}"
  *
  * Examples:
  *   - anthropic_api_key::global
  *   - claude_oauth::global
- *   - craft_oauth::global (for Craft API, not MCP)
  *   - source_oauth::{workspaceId}::{sourceId}
  *   - source_bearer::{workspaceId}::{sourceId}
  *

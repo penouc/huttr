@@ -615,6 +615,9 @@ export const IPC_CHANNELS = {
   GET_HOME_DIR: "system:homeDir",
   IS_DEBUG_MODE: "system:isDebugMode",
 
+  // Git
+  GET_GIT_BRANCH: 'git:branch',
+
   // Auto-update
   UPDATE_CHECK: "update:check",
   UPDATE_GET_INFO: "update:getInfo",
@@ -846,6 +849,9 @@ export interface ElectronAPI {
   getVersions(): { node: string; chrome: string; electron: string };
   getHomeDir(): Promise<string>;
   isDebugMode(): Promise<boolean>;
+
+  // Git
+  getGitBranch(path: string): Promise<string | null>
 
   // Auto-update
   checkForUpdates(): Promise<UpdateInfo>;
@@ -1181,6 +1187,15 @@ export type ChatFilter =
   | { kind: "allChats" }
   | { kind: "flagged" }
   | { kind: "state"; stateId: string };
+
+/**
+ * Source filter options - determines which sources to show
+ * - 'all': All sources regardless of type
+ * - 'type': Sources of specific type (api, mcp, local)
+ */
+export type SourceFilter =
+  | { kind: 'all' }
+  | { kind: 'type'; sourceType: 'api' | 'mcp' | 'local' }
 
 /**
  * Settings subpage options
