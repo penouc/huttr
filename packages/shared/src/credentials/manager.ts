@@ -9,11 +9,15 @@
  *   2. Encrypted file storage (cross-platform, no OS keychain prompts)
  */
 
-import type { CredentialBackend } from './backends/types.ts';
-import type { CredentialId, CredentialType, StoredCredential } from './types.ts';
-import { SecureStorageBackend } from './backends/secure-storage.ts';
-import { EnvironmentBackend } from './backends/env.ts';
-import { debug } from '../utils/debug.ts';
+import type { CredentialBackend } from "./backends/types.ts";
+import type {
+  CredentialId,
+  CredentialType,
+  StoredCredential,
+} from "./types.ts";
+import { SecureStorageBackend } from "./backends/secure-storage.ts";
+import { EnvironmentBackend } from "./backends/env.ts";
+import { debug } from "../utils/debug.ts";
 
 export class CredentialManager {
   private backends: CredentialBackend[] = [];
@@ -62,7 +66,9 @@ export class CredentialManager {
     for (const backend of potentialBackends) {
       if (await backend.isAvailable()) {
         this.backends.push(backend);
-        debug(`[CredentialManager] Backend available: ${backend.name} (priority ${backend.priority})`);
+        debug(
+          `[CredentialManager] Backend available: ${backend.name} (priority ${backend.priority})`,
+        );
       }
     }
 
@@ -70,10 +76,13 @@ export class CredentialManager {
     this.backends.sort((a, b) => b.priority - a.priority);
 
     // Find the first writable backend (not environment)
-    this.writeBackend = this.backends.find((b) => b.name !== 'environment') || null;
+    this.writeBackend =
+      this.backends.find((b) => b.name !== "environment") || null;
 
     if (this.writeBackend) {
-      debug(`[CredentialManager] Using write backend: ${this.writeBackend.name}`);
+      debug(
+        `[CredentialManager] Using write backend: ${this.writeBackend.name}`,
+      );
     } else {
       debug(`[CredentialManager] WARNING: No writable backend available.`);
     }
@@ -116,7 +125,7 @@ export class CredentialManager {
     await this.ensureInitialized();
 
     if (!this.writeBackend) {
-      throw new Error('No writable credential backend available');
+      throw new Error("No writable credential backend available");
     }
 
     await this.writeBackend.set(id, credential);
@@ -132,7 +141,7 @@ export class CredentialManager {
 
     let deleted = false;
     for (const backend of this.backends) {
-      if (backend.name === 'environment') continue;
+      if (backend.name === "environment") continue;
 
       try {
         if (await backend.delete(id)) {
@@ -181,24 +190,57 @@ export class CredentialManager {
 
   /** Get Anthropic API key */
   async getApiKey(): Promise<string | null> {
-    const cred = await this.get({ type: 'anthropic_api_key' });
+    const cred = await this.get({ type: "anthropic_api_key" });
     return cred?.value || null;
   }
 
   /** Set Anthropic API key */
   async setApiKey(key: string): Promise<void> {
-    await this.set({ type: 'anthropic_api_key' }, { value: key });
+    await this.set({ type: "anthropic_api_key" }, { value: key });
+  }
+
+  /** Get Minimax API key */
+  async getMinimaxApiKey(): Promise<string | null> {
+    const cred = await this.get({ type: "minimax_api_key" });
+    return cred?.value || null;
+  }
+
+  /** Set Minimax API key */
+  async setMinimaxApiKey(key: string): Promise<void> {
+    await this.set({ type: "minimax_api_key" }, { value: key });
+  }
+
+  /** Get GLM API key */
+  async getGlmApiKey(): Promise<string | null> {
+    const cred = await this.get({ type: "glm_api_key" });
+    return cred?.value || null;
+  }
+
+  /** Set GLM API key */
+  async setGlmApiKey(key: string): Promise<void> {
+    await this.set({ type: "glm_api_key" }, { value: key });
+  }
+
+  /** Get Zenmux API key */
+  async getZenmuxApiKey(): Promise<string | null> {
+    const cred = await this.get({ type: "zenmux_api_key" });
+    return cred?.value || null;
+  }
+
+  /** Set Zenmux API key */
+  async setZenmuxApiKey(key: string): Promise<void> {
+    await this.set({ type: "zenmux_api_key" }, { value: key });
   }
 
   /** Get Claude OAuth token */
   async getClaudeOAuth(): Promise<string | null> {
-    const cred = await this.get({ type: 'claude_oauth' });
+    const cred = await this.get({ type: "claude_oauth" });
     return cred?.value || null;
   }
 
   /** Set Claude OAuth token */
   async setClaudeOAuth(token: string): Promise<void> {
-    await this.set({ type: 'claude_oauth' }, { value: token });
+    await this.set({ type: "claude_oauth" }, { value: token });
   }
 
   /** Get Claude OAuth credentials (with refresh token and expiry) */
@@ -207,7 +249,7 @@ export class CredentialManager {
     refreshToken?: string;
     expiresAt?: number;
   } | null> {
-    const cred = await this.get({ type: 'claude_oauth' });
+    const cred = await this.get({ type: "claude_oauth" });
     if (!cred) return null;
 
     return {
@@ -223,35 +265,36 @@ export class CredentialManager {
     refreshToken?: string;
     expiresAt?: number;
   }): Promise<void> {
-    await this.set({ type: 'claude_oauth' }, {
-      value: credentials.accessToken,
-      refreshToken: credentials.refreshToken,
-      expiresAt: credentials.expiresAt,
-    });
+    await this.set(
+      { type: "claude_oauth" },
+      {
+        value: credentials.accessToken,
+        refreshToken: credentials.refreshToken,
+        expiresAt: credentials.expiresAt,
+      },
+    );
   }
 
   /** Get Craft OAuth token */
   async getCraftOAuth(): Promise<string | null> {
-    const cred = await this.get({ type: 'craft_oauth' });
+    const cred = await this.get({ type: "craft_oauth" });
     return cred?.value || null;
   }
 
   /** Set Craft OAuth token */
   async setCraftOAuth(token: string): Promise<void> {
-    await this.set({ type: 'craft_oauth' }, { value: token });
+    await this.set({ type: "craft_oauth" }, { value: token });
   }
 
   /** Get workspace OAuth credentials */
-  async getWorkspaceOAuth(
-    workspaceId: string
-  ): Promise<{
+  async getWorkspaceOAuth(workspaceId: string): Promise<{
     accessToken: string;
     refreshToken?: string;
     expiresAt?: number;
     clientId?: string;
     tokenType?: string;
   } | null> {
-    const cred = await this.get({ type: 'workspace_oauth', workspaceId });
+    const cred = await this.get({ type: "workspace_oauth", workspaceId });
     if (!cred) return null;
 
     return {
@@ -272,36 +315,36 @@ export class CredentialManager {
       expiresAt?: number;
       clientId?: string;
       tokenType?: string;
-    }
+    },
   ): Promise<void> {
     await this.set(
-      { type: 'workspace_oauth', workspaceId },
+      { type: "workspace_oauth", workspaceId },
       {
         value: credentials.accessToken,
         refreshToken: credentials.refreshToken,
         expiresAt: credentials.expiresAt,
         clientId: credentials.clientId,
         tokenType: credentials.tokenType,
-      }
+      },
     );
   }
 
   /** Get workspace bearer token */
   async getWorkspaceBearer(workspaceId: string): Promise<string | null> {
-    const cred = await this.get({ type: 'workspace_bearer', workspaceId });
+    const cred = await this.get({ type: "workspace_bearer", workspaceId });
     return cred?.value || null;
   }
 
   /** Set workspace bearer token */
   async setWorkspaceBearer(workspaceId: string, token: string): Promise<void> {
-    await this.set({ type: 'workspace_bearer', workspaceId }, { value: token });
+    await this.set({ type: "workspace_bearer", workspaceId }, { value: token });
   }
 
   /** Delete all credentials for a workspace */
   async deleteWorkspaceCredentials(workspaceId: string): Promise<void> {
     // Delete workspace-level credentials
-    await this.delete({ type: 'workspace_oauth', workspaceId });
-    await this.delete({ type: 'workspace_bearer', workspaceId });
+    await this.delete({ type: "workspace_oauth", workspaceId });
+    await this.delete({ type: "workspace_bearer", workspaceId });
 
     // Delete all source credentials for this workspace
     const allCreds = await this.list({ workspaceId });

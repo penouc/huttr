@@ -3,11 +3,17 @@
  * Update model IDs here when new versions are released.
  */
 
+export interface ModelApiConfig {
+  baseURL?: string;
+  apiKeyEnvVar?: string;
+}
+
 export interface ModelDefinition {
   id: string;
   name: string;
   shortName: string;
   description: string;
+  apiConfig?: ModelApiConfig;
 }
 
 // ============================================
@@ -15,9 +21,57 @@ export interface ModelDefinition {
 // ============================================
 
 export const MODELS: ModelDefinition[] = [
-  { id: 'claude-opus-4-5-20251101', name: 'Opus 4.5', shortName: 'Opus', description: 'Most capable' },
-  { id: 'claude-sonnet-4-5-20250929', name: 'Sonnet 4.5', shortName: 'Sonnet', description: 'Balanced' },
-  { id: 'claude-haiku-4-5-20251001', name: 'Haiku 4.5', shortName: 'Haiku', description: 'Fast & efficient' },
+  {
+    id: "claude-opus-4-5-20251101",
+    name: "Opus 4.5",
+    shortName: "Opus",
+    description: "Most capable",
+  },
+  {
+    id: "claude-sonnet-4-5-20250929",
+    name: "Sonnet 4.5",
+    shortName: "Sonnet",
+    description: "Balanced",
+  },
+  {
+    id: "claude-haiku-4-5-20251001",
+    name: "Haiku 4.5",
+    shortName: "Haiku",
+    description: "Fast & efficient",
+  },
+  // Minimax
+  {
+    id: "MiniMax-M2.1",
+    name: "Minimax M2.1",
+    shortName: "M2.1",
+    description: "Minimax M2.1",
+    apiConfig: {
+      baseURL: "https://api.minimaxi.io/anthropic",
+      apiKeyEnvVar: "MINIMAX_API_KEY",
+    },
+  },
+  // GLM
+  {
+    id: "glm-4.7",
+    name: "GLM 4.7",
+    shortName: "GLM 4.7",
+    description: "GLM 4.7",
+    apiConfig: {
+      baseURL: "https://open.bigmodel.cn/api/paas/v4",
+      apiKeyEnvVar: "GLM_API_KEY",
+    },
+  },
+  // Zenmux
+  {
+    id: "minimax/minimax-m2.1",
+    name: "Zenmux Minimax",
+    shortName: "Zenmux",
+    description: "Zenmux Minimax M2.1",
+    apiConfig: {
+      baseURL: "https://zenmux.ai/api/anthropic",
+      apiKeyEnvVar: "ZENMUX_API_KEY",
+    },
+  },
 ];
 
 // ============================================
@@ -25,16 +79,16 @@ export const MODELS: ModelDefinition[] = [
 // ============================================
 
 /** Default model for main chat (user-facing) */
-export const DEFAULT_MODEL = 'claude-sonnet-4-5-20250929';
+export const DEFAULT_MODEL = "claude-sonnet-4-5-20250929";
 
 /** Model for agent definition extraction (always high quality) */
-export const EXTRACTION_MODEL = 'claude-opus-4-5-20251101';
+export const EXTRACTION_MODEL = "claude-opus-4-5-20251101";
 
 /** Model for API response summarization (cost efficient) */
-export const SUMMARIZATION_MODEL = 'claude-haiku-4-5-20251001';
+export const SUMMARIZATION_MODEL = "claude-haiku-4-5-20251001";
 
 /** Model for instruction updates (high quality for accurate document editing) */
-export const INSTRUCTION_UPDATE_MODEL = 'claude-opus-4-5-20251101';
+export const INSTRUCTION_UPDATE_MODEL = "claude-opus-4-5-20251101";
 
 // ============================================
 // HELPER FUNCTIONS
@@ -42,21 +96,21 @@ export const INSTRUCTION_UPDATE_MODEL = 'claude-opus-4-5-20251101';
 
 /** Get display name for a model ID (full name with version) */
 export function getModelDisplayName(modelId: string): string {
-  const model = MODELS.find(m => m.id === modelId);
+  const model = MODELS.find((m) => m.id === modelId);
   if (model) return model.name;
   // Fallback: strip prefix and date suffix
-  return modelId.replace('claude-', '').replace(/-\d{8}$/, '');
+  return modelId.replace("claude-", "").replace(/-\d{8}$/, "");
 }
 
 /** Get short display name for a model ID (without version number) */
 export function getModelShortName(modelId: string): string {
-  const model = MODELS.find(m => m.id === modelId);
+  const model = MODELS.find((m) => m.id === modelId);
   if (model) return model.shortName;
   // Fallback: strip prefix and date suffix
-  return modelId.replace('claude-', '').replace(/-[\d.-]+$/, '');
+  return modelId.replace("claude-", "").replace(/-[\d.-]+$/, "");
 }
 
 /** Check if model is an Opus model (for cache TTL decisions) */
 export function isOpusModel(modelId: string): boolean {
-  return modelId.includes('opus');
+  return modelId.includes("opus");
 }

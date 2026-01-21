@@ -19,33 +19,39 @@
 
 /** Types of credentials we store */
 export type CredentialType =
-  | 'anthropic_api_key'
-  | 'claude_oauth'
-  | 'craft_oauth'
-  | 'workspace_oauth'
-  | 'workspace_bearer'
-  | 'mcp_oauth'
-  | 'api_key'
+  | "anthropic_api_key"
+  | "minimax_api_key" // Minimax model API key
+  | "glm_api_key" // GLM model API key
+  | "zenmux_api_key" // Zenmux model API key
+  | "claude_oauth"
+  | "craft_oauth"
+  | "workspace_oauth"
+  | "workspace_bearer"
+  | "mcp_oauth"
+  | "api_key"
   // Source credentials (stored at ~/.craft-agent/workspaces/{ws}/sources/{slug}/)
-  | 'source_oauth'       // OAuth tokens for MCP/API sources
-  | 'source_bearer'      // Bearer tokens
-  | 'source_apikey'      // API keys
-  | 'source_basic';      // Basic auth (base64 encoded user:pass)
+  | "source_oauth" // OAuth tokens for MCP/API sources
+  | "source_bearer" // Bearer tokens
+  | "source_apikey" // API keys
+  | "source_basic"; // Basic auth (base64 encoded user:pass)
 
 /** Valid credential types for validation */
 const VALID_CREDENTIAL_TYPES: readonly CredentialType[] = [
-  'anthropic_api_key',
-  'claude_oauth',
-  'craft_oauth',
-  'workspace_oauth',
-  'workspace_bearer',
-  'mcp_oauth',
-  'api_key',
+  "anthropic_api_key",
+  "minimax_api_key",
+  "glm_api_key",
+  "zenmux_api_key",
+  "claude_oauth",
+  "craft_oauth",
+  "workspace_oauth",
+  "workspace_bearer",
+  "mcp_oauth",
+  "api_key",
   // Source credentials
-  'source_oauth',
-  'source_bearer',
-  'source_apikey',
-  'source_basic',
+  "source_oauth",
+  "source_bearer",
+  "source_apikey",
+  "source_basic",
 ] as const;
 
 /** Check if a string is a valid CredentialType */
@@ -91,14 +97,14 @@ export interface StoredCredential {
 
 // Using "::" as delimiter instead of "/" because server names and API names
 // could contain "/" (e.g., URLs like "https://api.example.com")
-const CREDENTIAL_DELIMITER = '::';
+const CREDENTIAL_DELIMITER = "::";
 
 /** Source credential types */
 const SOURCE_CREDENTIAL_TYPES = [
-  'source_oauth',
-  'source_bearer',
-  'source_apikey',
-  'source_basic',
+  "source_oauth",
+  "source_bearer",
+  "source_apikey",
+  "source_basic",
 ] as const;
 
 /** Check if type is a source credential */
@@ -118,7 +124,7 @@ export function credentialIdToAccount(id: CredentialId): string {
     return parts.join(CREDENTIAL_DELIMITER);
   }
 
-  parts.push('global');
+  parts.push("global");
   return parts.join(CREDENTIAL_DELIMITER);
 }
 
@@ -140,7 +146,7 @@ export function accountToCredentialId(account: string): CredentialId | null {
     return { type, workspaceId: parts[1], sourceId: parts[2] };
   }
 
-  if (parts.length === 2 && parts[1] === 'global') {
+  if (parts.length === 2 && parts[1] === "global") {
     return { type };
   }
 

@@ -341,6 +341,18 @@ export default function AppSettingsPage() {
   const [isSavingApiKey, setIsSavingApiKey] = useState(false)
   const [apiKeyError, setApiKeyError] = useState<string | undefined>()
 
+  // Model API Keys state (Minimax, GLM, Zenmux)
+  const [modelApiKeys, setModelApiKeys] = useState<{ hasMinimaxKey: boolean; hasGlmKey: boolean; hasZenmuxKey: boolean }>({ hasMinimaxKey: false, hasGlmKey: false, hasZenmuxKey: false })
+  const [minimaxKeyValue, setMinimaxKeyValue] = useState('')
+  const [glmKeyValue, setGlmKeyValue] = useState('')
+  const [zenmuxKeyValue, setZenmuxKeyValue] = useState('')
+  const [isSavingMinimaxKey, setIsSavingMinimaxKey] = useState(false)
+  const [isSavingGlmKey, setIsSavingGlmKey] = useState(false)
+  const [isSavingZenmuxKey, setIsSavingZenmuxKey] = useState(false)
+  const [showMinimaxKey, setShowMinimaxKey] = useState(false)
+  const [showGlmKey, setShowGlmKey] = useState(false)
+  const [showZenmuxKey, setShowZenmuxKey] = useState(false)
+
   // Claude OAuth state
   const [existingClaudeToken, setExistingClaudeToken] = useState<string | null>(null)
   const [claudeOAuthStatus, setClaudeOAuthStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
@@ -364,18 +376,20 @@ export default function AppSettingsPage() {
     }
   }, [updateChecker])
 
-  // Load current billing method, notifications setting, and preset themes on mount
+  // Load current billing method, notifications setting, model API keys, and preset themes on mount
   useEffect(() => {
     const loadSettings = async () => {
       if (!window.electronAPI) return
       try {
-        const [billing, notificationsOn] = await Promise.all([
+        const [billing, notificationsOn, modelKeys] = await Promise.all([
           window.electronAPI.getBillingMethod(),
           window.electronAPI.getNotificationsEnabled(),
+          window.electronAPI.getModelApiKeys(),
         ])
         setAuthType(billing.authType)
         setHasCredential(billing.hasCredential)
         setNotificationsEnabled(notificationsOn)
+        setModelApiKeys(modelKeys)
       } catch (error) {
         console.error('Failed to load settings:', error)
       } finally {
@@ -555,6 +569,93 @@ export default function AppSettingsPage() {
     }
   }, [])
 
+  // Save Minimax API key
+  const handleSaveMinimaxKey = useCallback(async () => {
+    if (!window.electronAPI || !minimaxKeyValue.trim()) return
+    setIsSavingMinimaxKey(true)
+    try {
+      await window.electronAPI.setModelApiKey('minimax', minimaxKeyValue.trim())
+      setModelApiKeys(prev => ({ ...prev, hasMinimaxKey: true }))
+      setMinimaxKeyValue('')
+    } catch (error) {
+      console.error('Failed to save Minimax API key:', error)
+    } finally {
+      setIsSavingMinimaxKey(false)
+    }
+  }, [minimaxKeyValue])
+
+  // Clear Minimax API key
+  const handleClearMinimaxKey = useCallback(async () => {
+    if (!window.electronAPI) return
+    setIsSavingMinimaxKey(true)
+    try {
+      await window.electronAPI.setModelApiKey('minimax', null)
+      setModelApiKeys(prev => ({ ...prev, hasMinimaxKey: false }))
+    } catch (error) {
+      console.error('Failed to clear Minimax API key:', error)
+    } finally {
+      setIsSavingMinimaxKey(false)
+    }
+  }, [])
+
+  // Save GLM API key
+  const handleSaveGlmKey = useCallback(async () => {
+    if (!window.electronAPI || !glmKeyValue.trim()) return
+    setIsSavingGlmKey(true)
+    try {
+      await window.electronAPI.setModelApiKey('glm', glmKeyValue.trim())
+      setModelApiKeys(prev => ({ ...prev, hasGlmKey: true }))
+      setGlmKeyValue('')
+    } catch (error) {
+      console.error('Failed to save GLM API key:', error)
+    } finally {
+      setIsSavingGlmKey(false)
+    }
+  }, [glmKeyValue])
+
+  // Clear GLM API key
+  const handleClearGlmKey = useCallback(async () => {
+    if (!window.electronAPI) return
+    setIsSavingGlmKey(true)
+    try {
+      await window.electronAPI.setModelApiKey('glm', null)
+      setModelApiKeys(prev => ({ ...prev, hasGlmKey: false }))
+    } catch (error) {
+      console.error('Failed to clear GLM API key:', error)
+    } finally {
+      setIsSavingGlmKey(false)
+    }
+  }, [])
+
+  // Save Zenmux API key
+  const handleSaveZenmuxKey = useCallback(async () => {
+    if (!window.electronAPI || !zenmuxKeyValue.trim()) return
+    setIsSavingZenmuxKey(true)
+    try {
+      await window.electronAPI.setModelApiKey('zenmux', zenmuxKeyValue.trim())
+      setModelApiKeys(prev => ({ ...prev, hasZenmuxKey: true }))
+      setZenmuxKeyValue('')
+    } catch (error) {
+      console.error('Failed to save Zenmux API key:', error)
+    } finally {
+      setIsSavingZenmuxKey(false)
+    }
+  }, [zenmuxKeyValue])
+
+  // Clear Zenmux API key
+  const handleClearZenmuxKey = useCallback(async () => {
+    if (!window.electronAPI) return
+    setIsSavingZenmuxKey(true)
+    try {
+      await window.electronAPI.setModelApiKey('zenmux', null)
+      setModelApiKeys(prev => ({ ...prev, hasZenmuxKey: false }))
+    } catch (error) {
+      console.error('Failed to clear Zenmux API key:', error)
+    } finally {
+      setIsSavingZenmuxKey(false)
+    }
+  }, [])
+
   const handleNotificationsEnabledChange = useCallback(async (enabled: boolean) => {
     setNotificationsEnabled(enabled)
     await window.electronAPI.setNotificationsEnabled(enabled)
@@ -700,6 +801,158 @@ export default function AppSettingsPage() {
                   )}
                 </DialogContent>
               </Dialog>
+            </SettingsSection>
+
+            {/* Model API Keys */}
+            <SettingsSection title="Model API Keys" description="Configure API keys for additional AI models">
+              <SettingsCard>
+                {/* Minimax API Key */}
+                <SettingsRow label="Minimax M2.1">
+                  <div className="flex items-center gap-2">
+                    {modelApiKeys.hasMinimaxKey ? (
+                      <>
+                        <span className="text-sm text-success flex items-center gap-1">
+                          <Check className="size-3" /> Configured
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleClearMinimaxKey}
+                          disabled={isSavingMinimaxKey}
+                        >
+                          Clear
+                        </Button>
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <div className="relative">
+                          <Input
+                            type={showMinimaxKey ? 'text' : 'password'}
+                            value={minimaxKeyValue}
+                            onChange={(e) => setMinimaxKeyValue(e.target.value)}
+                            placeholder="Enter API key..."
+                            className="w-48 pr-8"
+                            disabled={isSavingMinimaxKey}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowMinimaxKey(!showMinimaxKey)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            tabIndex={-1}
+                          >
+                            {showMinimaxKey ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                          </button>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={handleSaveMinimaxKey}
+                          disabled={!minimaxKeyValue.trim() || isSavingMinimaxKey}
+                        >
+                          {isSavingMinimaxKey ? <Spinner className="size-3" /> : 'Save'}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </SettingsRow>
+
+                {/* GLM API Key */}
+                <SettingsRow label="GLM 4.7">
+                  <div className="flex items-center gap-2">
+                    {modelApiKeys.hasGlmKey ? (
+                      <>
+                        <span className="text-sm text-success flex items-center gap-1">
+                          <Check className="size-3" /> Configured
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleClearGlmKey}
+                          disabled={isSavingGlmKey}
+                        >
+                          Clear
+                        </Button>
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <div className="relative">
+                          <Input
+                            type={showGlmKey ? 'text' : 'password'}
+                            value={glmKeyValue}
+                            onChange={(e) => setGlmKeyValue(e.target.value)}
+                            placeholder="Enter API key..."
+                            className="w-48 pr-8"
+                            disabled={isSavingGlmKey}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowGlmKey(!showGlmKey)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            tabIndex={-1}
+                          >
+                            {showGlmKey ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                          </button>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={handleSaveGlmKey}
+                          disabled={!glmKeyValue.trim() || isSavingGlmKey}
+                        >
+                          {isSavingGlmKey ? <Spinner className="size-3" /> : 'Save'}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </SettingsRow>
+
+                {/* Zenmux API Key */}
+                <SettingsRow label="Zenmux Auto">
+                  <div className="flex items-center gap-2">
+                    {modelApiKeys.hasZenmuxKey ? (
+                      <>
+                        <span className="text-sm text-success flex items-center gap-1">
+                          <Check className="size-3" /> Configured
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleClearZenmuxKey}
+                          disabled={isSavingZenmuxKey}
+                        >
+                          Clear
+                        </Button>
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <div className="relative">
+                          <Input
+                            type={showZenmuxKey ? 'text' : 'password'}
+                            value={zenmuxKeyValue}
+                            onChange={(e) => setZenmuxKeyValue(e.target.value)}
+                            placeholder="Enter API key..."
+                            className="w-48 pr-8"
+                            disabled={isSavingZenmuxKey}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowZenmuxKey(!showZenmuxKey)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            tabIndex={-1}
+                          >
+                            {showZenmuxKey ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                          </button>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={handleSaveZenmuxKey}
+                          disabled={!zenmuxKeyValue.trim() || isSavingZenmuxKey}
+                        >
+                          {isSavingZenmuxKey ? <Spinner className="size-3" /> : 'Save'}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </SettingsRow>
+              </SettingsCard>
             </SettingsSection>
 
             {/* About */}
