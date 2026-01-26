@@ -4,12 +4,28 @@ import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "path";
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react({
+      babel: {
+        plugins: [
+          // Jotai HMR support: caches atom instances in globalThis.jotaiAtomCache
+          // so that HMR module re-execution returns stable atom references
+          // instead of creating new (empty) atoms that orphan existing data.
+          "jotai/babel/plugin-debug-label",
+          [
+            "jotai/babel/plugin-react-refresh",
+            { customAtomNames: ["atomFamily"] },
+          ],
+        ],
+      },
+    }),
+    tailwindcss(),
+  ],
   root: resolve(__dirname, "src/renderer"),
   base: "./",
   build: {
     outDir: resolve(__dirname, "dist/renderer"),
-    emptyDirBeforeWrite: true,
+    emptyOutDir: true,
     rollupOptions: {
       input: {
         main: resolve(__dirname, "src/renderer/index.html"),

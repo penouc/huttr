@@ -1,12 +1,8 @@
 /**
  * Credential Manager
  *
- * Main interface for credential storage. Automatically selects the best
- * available backend and provides convenience methods for common operations.
- *
- * Backend priority:
- *   1. Environment variables (server deployment, read-only)
- *   2. Encrypted file storage (cross-platform, no OS keychain prompts)
+ * Main interface for credential storage. Uses encrypted file storage
+ * for cross-platform compatibility without OS keychain prompts.
  */
 
 import type { CredentialBackend } from "./backends/types.ts";
@@ -56,11 +52,7 @@ export class CredentialManager {
   }
 
   private async _doInitialize(): Promise<void> {
-    // Register backends in priority order (secure storage + environment)
-    const potentialBackends: CredentialBackend[] = [
-      new SecureStorageBackend(),
-      new EnvironmentBackend(),
-    ];
+    const potentialBackends: CredentialBackend[] = [new SecureStorageBackend()];
 
     // Check which backends are available
     for (const backend of potentialBackends) {
@@ -84,7 +76,7 @@ export class CredentialManager {
         `[CredentialManager] Using write backend: ${this.writeBackend.name}`,
       );
     } else {
-      debug(`[CredentialManager] WARNING: No writable backend available.`);
+      debug(`[CredentialManager] WARNING: No backend available.`);
     }
 
     this.initialized = true;

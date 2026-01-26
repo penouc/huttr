@@ -32,7 +32,7 @@ import {
   type ReactNode,
 } from 'react'
 import { toast } from 'sonner'
-import { useAtomValue } from 'jotai'
+import { useAtomValue, useSetAtom } from 'jotai'
 import { useSession } from '@/hooks/useSession'
 import {
   parseRoute,
@@ -59,7 +59,7 @@ import {
   isSkillsNavigation,
   DEFAULT_NAVIGATION_STATE,
 } from '../../shared/types'
-import { sessionMetaMapAtom, type SessionMeta } from '@/atoms/sessions'
+import { sessionMetaMapAtom, updateSessionMetaAtom, type SessionMeta } from '@/atoms/sessions'
 import { sourcesAtom } from '@/atoms/sources'
 import { skillsAtom } from '@/atoms/skills'
 
@@ -90,6 +90,8 @@ interface NavigationContextValue {
   updateRightSidebar: (panel: RightSidebarPanel | undefined) => void
   /** Toggle right sidebar (with optional panel) */
   toggleRightSidebar: (panel?: RightSidebarPanel) => void
+  /** Navigate to a source (or source list if no slug), preserving the current filter type */
+  navigateToSource: (sourceSlug?: string) => void
 }
 
 const NavigationContext = createContext<NavigationContextValue | null>(null)
@@ -118,6 +120,7 @@ export function NavigationProvider({
   // Read session metadata directly from atom (reactive to session changes)
   const sessionMetaMap = useAtomValue(sessionMetaMapAtom)
   const sessionMetas = useMemo(() => Array.from(sessionMetaMap.values()), [sessionMetaMap])
+  const updateSessionMeta = useSetAtom(updateSessionMetaAtom)
 
   // Read sources from atom (populated by AppShell)
   const sources = useAtomValue(sourcesAtom)
@@ -181,8 +184,8 @@ export function NavigationProvider({
   // Helper: Get first source slug (optionally filtered by type)
   const getFirstSourceSlug = useCallback(
     (filter?: SourceFilter | null): string | null => {
-      // If no filter or 'all', return first source
-      if (!filter || filter.kind === 'all') {
+      // If no filter, return first source
+      if (!filter) {
         return sources[0]?.config.slug ?? null
       }
       // Filter by source type and return first match
@@ -223,11 +226,35 @@ export function NavigationProvider({
             await window.electronAPI.sessionCommand(session.id, { type: 'rename', name: parsed.params.name })
           }
 
-          // Update navigation state to show new chat in allChats
+          // Optimistically update session meta so it matches the filter immediately
+          // (avoids flicker while waiting for the event round-trip from main process)
+          if (parsed.params.status) {
+            updateSessionMeta(session.id, { todoState: parsed.params.status })
+          }
+          if (parsed.params.label) {
+            updateSessionMeta(session.id, { labels: [parsed.params.label] })
+          }
+
+          // Apply status (todo state) to new session if specified
+          if (parsed.params.status) {
+            await window.electronAPI.sessionCommand(session.id, { type: 'setTodoState', state: parsed.params.status })
+          }
+
+          // Apply label to new session if specified
+          if (parsed.params.label) {
+            await window.electronAPI.sessionCommand(session.id, { type: 'setLabels', labels: [parsed.params.label] })
+          }
+
+          // Determine navigation filter — preserve status/label context if the new session was created with one
+          const filter: import('../../shared/types').ChatFilter =
+            parsed.params.status ? { kind: 'state', stateId: parsed.params.status } :
+            parsed.params.label ? { kind: 'label', labelId: parsed.params.label } :
+            { kind: 'allChats' }
+
           setSession({ selected: session.id })
           setNavigationState({
             navigator: 'chats',
-            filter: { kind: 'allChats' },
+            filter,
             details: { type: 'chat', sessionId: session.id },
           })
 
@@ -758,6 +785,25 @@ export function NavigationProvider({
     updateRightSidebar(newPanel)
   }, [navigationState, updateRightSidebar])
 
+  // Navigate to a source (or source list) while preserving the current filter type (api/mcp/local)
+  const navigateToSource = useCallback((sourceSlug?: string) => {
+    if (isSourcesNavigation(navigationState) && navigationState.filter?.kind === 'type') {
+      switch (navigationState.filter.sourceType) {
+        case 'api':
+          navigate(routes.view.sourcesApi(sourceSlug))
+          return
+        case 'mcp':
+          navigate(routes.view.sourcesMcp(sourceSlug))
+          return
+        case 'local':
+          navigate(routes.view.sourcesLocal(sourceSlug))
+          return
+      }
+    }
+    // No filter or 'all' filter - navigate without preserving type
+    navigate(routes.view.sources(sourceSlug ? { sourceSlug } : undefined))
+  }, [navigationState, navigate])
+
   return (
     <NavigationContext.Provider
       value={{
@@ -770,6 +816,7 @@ export function NavigationProvider({
         goForward,
         updateRightSidebar,
         toggleRightSidebar,
+        navigateToSource,
       }}
     >
       {children}

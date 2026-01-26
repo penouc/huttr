@@ -16,7 +16,6 @@ import { motion, AnimatePresence } from 'motion/react'
 import { PanelHeader } from '@/components/app-shell/PanelHeader'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { HeaderMenu } from '@/components/ui/HeaderMenu'
-import { HelpPopover } from '@/components/ui/HelpPopover'
 import { useAppShellContext } from '@/context/AppShellContext'
 import { cn } from '@/lib/utils'
 import { routes } from '@/lib/navigate'
@@ -50,6 +49,7 @@ export default function WorkspaceSettingsPage() {
   const onModelChange = appShellContext.onModelChange
   const activeWorkspaceId = appShellContext.activeWorkspaceId
   const onRefreshWorkspaces = appShellContext.onRefreshWorkspaces
+  const customModel = appShellContext.customModel
 
   // Workspace settings state
   const [wsName, setWsName] = useState('')
@@ -285,7 +285,7 @@ export default function WorkspaceSettingsPage() {
   if (!activeWorkspaceId) {
     return (
       <div className="h-full flex flex-col">
-        <PanelHeader title="Workspace Settings" actions={<><HelpPopover feature="workspaces" /><HeaderMenu route={routes.view.settings('workspace')} /></>} />
+        <PanelHeader title="Workspace Settings" actions={<HeaderMenu route={routes.view.settings('workspace')} helpFeature="workspaces" />} />
         <div className="flex-1 flex items-center justify-center">
           <p className="text-sm text-muted-foreground">No workspace selected</p>
         </div>
@@ -297,7 +297,7 @@ export default function WorkspaceSettingsPage() {
   if (isLoadingWorkspace) {
     return (
       <div className="h-full flex flex-col">
-        <PanelHeader title="Workspace Settings" actions={<><HelpPopover feature="workspaces" /><HeaderMenu route={routes.view.settings('workspace')} /></>} />
+        <PanelHeader title="Workspace Settings" actions={<HeaderMenu route={routes.view.settings('workspace')} helpFeature="workspaces" />} />
         <div className="flex-1 flex items-center justify-center">
           <Spinner className="text-muted-foreground" />
         </div>
@@ -307,11 +307,11 @@ export default function WorkspaceSettingsPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <PanelHeader title="Workspace Settings" actions={<><HelpPopover feature="workspaces" /><HeaderMenu route={routes.view.settings('workspace')} /></>} />
+      <PanelHeader title="Workspace Settings" actions={<HeaderMenu route={routes.view.settings('workspace')} helpFeature="workspaces" />} />
       <div className="flex-1 min-h-0 mask-fade-y">
         <ScrollArea className="h-full">
           <div className="px-5 py-7 max-w-3xl mx-auto">
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* Workspace Info */}
             <SettingsSection title="Workspace Info">
               <SettingsCard>
@@ -389,17 +389,27 @@ export default function WorkspaceSettingsPage() {
             {/* Model */}
             <SettingsSection title="Model">
               <SettingsCard>
-                <SettingsMenuSelectRow
-                  label="Default model"
-                  description="AI model for new chats"
-                  value={wsModel}
-                  onValueChange={handleModelChange}
-                  options={[
-                    { value: 'claude-opus-4-5-20251101', label: 'Opus 4.5', description: 'Most capable for complex work' },
-                    { value: 'claude-sonnet-4-5-20250929', label: 'Sonnet 4.5', description: 'Best for everyday tasks' },
-                    { value: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5', description: 'Fastest for quick answers' },
-                  ]}
-                />
+                {/* When a custom API connection is active, model is fixed — show info instead of selector */}
+                {customModel ? (
+                  <SettingsRow
+                    label="Default model"
+                    description="Set via API connection"
+                  >
+                    <span className="text-sm text-muted-foreground">{customModel}</span>
+                  </SettingsRow>
+                ) : (
+                  <SettingsMenuSelectRow
+                    label="Default model"
+                    description="AI model for new chats"
+                    value={wsModel}
+                    onValueChange={handleModelChange}
+                    options={[
+                      { value: 'claude-opus-4-5-20251101', label: 'Opus 4.5', description: 'Most capable for complex work' },
+                      { value: 'claude-sonnet-4-5-20250929', label: 'Sonnet 4.5', description: 'Best for everyday tasks' },
+                      { value: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5', description: 'Fastest for quick answers' },
+                    ]}
+                  />
+                )}
                 <SettingsMenuSelectRow
                   label="Thinking level"
                   description="Reasoning depth for new chats"

@@ -114,7 +114,14 @@ function isSourceCredential(type: CredentialType): boolean {
 export function credentialIdToAccount(id: CredentialId): string {
   const parts: string[] = [id.type];
 
-  // Workspace-scoped format:
+  // Workspace-scoped format (no source):
+  // workspace_oauth::{workspaceId}
+  if (id.type === "workspace_oauth" && id.workspaceId) {
+    parts.push(id.workspaceId);
+    return parts.join(CREDENTIAL_DELIMITER);
+  }
+
+  // Source-scoped format:
   // Source credentials: source_oauth::{workspaceId}::{sourceId}
   if (isSourceCredential(id.type) && id.workspaceId && id.sourceId) {
     parts.push(id.workspaceId);
@@ -138,7 +145,13 @@ export function accountToCredentialId(account: string): CredentialId | null {
 
   const type = typeStr;
 
-  // Workspace-scoped format:
+  // Workspace-scoped format (no source):
+  // workspace_oauth::{workspaceId}
+  if (type === "workspace_oauth" && parts.length === 2) {
+    return { type, workspaceId: parts[1] };
+  }
+
+  // Source-scoped format:
   // Source credentials: source_oauth::{workspaceId}::{sourceId}
   if (isSourceCredential(type) && parts.length === 3) {
     return { type, workspaceId: parts[1], sourceId: parts[2] };

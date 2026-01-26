@@ -1,11 +1,11 @@
-# Craft Agent Windows Installer
+# Craft Agents Windows Installer
 # Usage: irm https://agents.craft.do/install-app.ps1 | iex
 
 $ErrorActionPreference = "Stop"
 
 $VERSIONS_URL = "https://agents.craft.do/electron"
 $DOWNLOAD_DIR = "$env:TEMP\craft-agent-install"
-$APP_NAME = "Craft Agent"
+$APP_NAME = "Craft Agents"
 
 # Colors for output
 function Write-Info { Write-Host "> $args" -ForegroundColor Blue }
@@ -23,7 +23,7 @@ $arch = if ([Environment]::Is64BitOperatingSystem) { "x64" } else { "x86" }
 $platform = "win32-$arch"
 
 Write-Host ""
-Write-Info "Detected platform: $platform"
+Write-Info "Detected platform: $platform (arch: $arch)"
 
 # Create download directory
 New-Item -ItemType Directory -Force -Path $DOWNLOAD_DIR | Out-Null
@@ -47,7 +47,8 @@ Write-Info "Latest version: $version"
 Write-Info "Fetching manifest..."
 try {
     $manifest = Invoke-RestMethod -Uri "$VERSIONS_URL/$version/manifest.json" -UseBasicParsing
-    $binaryInfo = $manifest.binaries.$platform
+    # Use Select-Object for property names with hyphens (dot notation doesn't work with variable)
+    $binaryInfo = $manifest.binaries | Select-Object -ExpandProperty $platform -ErrorAction SilentlyContinue
     if (-not $binaryInfo) {
         Write-Err "Platform $platform not found in manifest"
     }
@@ -148,9 +149,9 @@ if ($actualHash -ne $checksum) {
 Write-Success "Checksum verified!"
 
 # Close the app if it's running
-$process = Get-Process -Name "Craft Agent" -ErrorAction SilentlyContinue
+$process = Get-Process -Name "Craft Agents" -ErrorAction SilentlyContinue
 if ($process) {
-    Write-Info "Closing Craft Agent..."
+    Write-Info "Closing Craft Agents..."
     $process | Stop-Process -Force
     Start-Sleep -Seconds 2
 }
@@ -185,9 +186,9 @@ Remove-Item -Path $installerPath -Force -ErrorAction SilentlyContinue
 # Add command line shortcut
 Write-Info "Adding 'craft-agents' command to PATH..."
 
-$binDir = "$env:LOCALAPPDATA\Craft Agent\bin"
+$binDir = "$env:LOCALAPPDATA\Craft Agents\bin"
 $cmdFile = "$binDir\craft-agents.cmd"
-$exePath = "$env:LOCALAPPDATA\Programs\Craft Agent\Craft Agent.exe"
+$exePath = "$env:LOCALAPPDATA\Programs\Craft Agents\Craft Agents.exe"
 
 # Create bin directory
 New-Item -ItemType Directory -Force -Path $binDir | Out-Null
@@ -211,7 +212,7 @@ Write-Host "--------------------------------------------------------------------
 Write-Host ""
 Write-Success "Installation complete!"
 Write-Host ""
-Write-Host "  Craft Agent has been installed."
+Write-Host "  Craft Agents has been installed."
 Write-Host ""
 Write-Host "  Launch from:"
 Write-Host "    - Start Menu or desktop shortcut"

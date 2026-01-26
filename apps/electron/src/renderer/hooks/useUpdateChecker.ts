@@ -68,7 +68,7 @@ export function useUpdateChecker(): UseUpdateCheckerResult {
       toast.dismiss(UPDATE_TOAST_ID)
       toast.info('Installing update...', {
         description: 'The app will restart automatically.',
-        duration: 3000,
+        duration: 5000,
       })
       await window.electronAPI.installUpdate()
     } catch (error) {

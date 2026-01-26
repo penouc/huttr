@@ -68,8 +68,16 @@ export interface SessionConfig {
   permissionMode?: PermissionMode;
   /** User-controlled todo state - determines inbox vs completed */
   todoState?: TodoState;
+  /** Labels applied to this session (bare IDs or "id::value" entries) */
+  labels?: string[];
   /** ID of last message user has read */
   lastReadMessageId?: string;
+  /**
+   * Explicit unread flag - single source of truth for NEW badge.
+   * Set to true when assistant message completes while user is NOT viewing.
+   * Set to false when user views the session (and not processing).
+   */
+  hasUnread?: boolean;
   /** Per-session source selection (source slugs) */
   enabledSourceSlugs?: string[];
   /** Working directory for this session (used by agent for bash commands and context) */
@@ -127,8 +135,16 @@ export interface SessionHeader {
   permissionMode?: PermissionMode;
   /** User-controlled todo state - determines inbox vs completed */
   todoState?: TodoState;
+  /** Labels applied to this session (bare IDs or "id::value" entries) */
+  labels?: string[];
   /** ID of last message user has read */
   lastReadMessageId?: string;
+  /**
+   * Explicit unread flag - single source of truth for NEW badge.
+   * Set to true when assistant message completes while user is NOT viewing.
+   * Set to false when user views the session (and not processing).
+   */
+  hasUnread?: boolean;
   /** Per-session source selection (source slugs) */
   enabledSourceSlugs?: string[];
   /** Working directory for this session (used by agent for bash commands and context) */
@@ -163,6 +179,8 @@ export interface SessionHeader {
   preview?: string;
   /** Token usage statistics */
   tokenUsage: SessionTokenUsage;
+  /** ID of the last final (non-intermediate) assistant message - for unread detection without loading messages */
+  lastFinalMessageId?: string;
 }
 
 /**
@@ -182,6 +200,8 @@ export interface SessionMetadata {
   isFlagged?: boolean;
   /** User-controlled todo state */
   todoState?: TodoState;
+  /** Labels applied to this session (bare IDs or "id::value" entries) */
+  labels?: string[];
   /** Permission mode for this session */
   permissionMode?: PermissionMode;
   /** Number of plan files for this session */
@@ -200,4 +220,16 @@ export interface SessionMetadata {
   model?: string;
   /** Thinking level for this session ('off', 'think', 'max') */
   thinkingLevel?: ThinkingLevel;
+  /** ID of last message user has read - for unread detection */
+  lastReadMessageId?: string;
+  /** ID of the last final (non-intermediate) assistant message - for unread detection */
+  lastFinalMessageId?: string;
+  /**
+   * Explicit unread flag - single source of truth for NEW badge.
+   * Set to true when assistant message completes while user is NOT viewing.
+   * Set to false when user views the session (and not processing).
+   */
+  hasUnread?: boolean;
+  /** Token usage statistics (from JSONL header, available without loading messages) */
+  tokenUsage?: SessionTokenUsage;
 }

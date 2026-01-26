@@ -35,6 +35,8 @@ export interface CodePreviewOverlayProps {
   error?: string
   /** Callback to open file in external editor */
   onOpenFile?: (filePath: string) => void
+  /** Render inline without dialog (for playground) */
+  embedded?: boolean
 }
 
 export function CodePreviewOverlay({
@@ -50,9 +52,8 @@ export function CodePreviewOverlay({
   theme = 'light',
   error,
   onOpenFile,
+  embedded,
 }: CodePreviewOverlayProps) {
-  const backgroundColor = theme === 'dark' ? '#1e1e1e' : '#ffffff'
-
   // Build subtitle with line info
   const subtitle =
     startLine !== undefined && totalLines !== undefined && numLines !== undefined
@@ -73,9 +74,9 @@ export function CodePreviewOverlay({
       onTitleClick={onOpenFile ? () => onOpenFile(filePath) : undefined}
       subtitle={subtitle}
       error={error ? { label: mode === 'write' ? 'Write Failed' : 'Read Failed', message: error } : undefined}
-      backgroundColor={backgroundColor}
+      embedded={embedded}
     >
-      <div className="h-full" style={{ backgroundColor }}>
+      <div className="h-full">
         <ShikiCodeViewer
           code={content}
           filePath={filePath}

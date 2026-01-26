@@ -77,16 +77,30 @@ export {
   type PreviewBadgeVariant,
 } from './components/ui'
 
+// Tooltip
+export {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from './components/tooltip'
+
 // Code viewer components
 export {
   ShikiCodeViewer,
   ShikiDiffViewer,
+  getDiffStats,
+  DiffViewerControls,
+  DiffSplitIcon,
+  DiffUnifiedIcon,
+  DiffBackgroundIcon,
   LANGUAGE_MAP,
   getLanguageFromPath,
   formatFilePath,
   truncateFilePath,
   type ShikiCodeViewerProps,
   type ShikiDiffViewerProps,
+  type DiffViewerControlsProps,
 } from './components/code-viewer'
 
 // Terminal components
@@ -115,18 +129,18 @@ export {
   type CopyButtonProps,
   // Specialized overlays
   CodePreviewOverlay,
-  DiffPreviewOverlay,
   MultiDiffPreviewOverlay,
   TerminalPreviewOverlay,
   GenericOverlay,
   JSONPreviewOverlay,
   DataTableOverlay,
   DocumentFormattedMarkdownOverlay,
+  detectLanguage,
   detectLanguageFromPath,
   type CodePreviewOverlayProps,
-  type DiffPreviewOverlayProps,
   type MultiDiffPreviewOverlayProps,
   type FileChange,
+  type DiffViewerSettings,
   type TerminalPreviewOverlayProps,
   type GenericOverlayProps,
   type JSONPreviewOverlayProps,
@@ -158,7 +172,6 @@ export {
   type GrepResult,
   type GlobResult,
   type CodeOverlayData,
-  type DiffOverlayData,
   type TerminalOverlayData,
   type GenericOverlayData,
   type JSONOverlayData,
@@ -171,6 +184,7 @@ export * from './components/chat/turn-utils'
 // Icons
 export {
   Icon_Folder,
+  Icon_Home,
   Icon_Inbox,
   type IconProps,
 } from './components/icons'

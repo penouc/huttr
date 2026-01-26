@@ -14,7 +14,6 @@ import { useState, useEffect, useMemo } from 'react'
 import { PanelHeader } from '@/components/app-shell/PanelHeader'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { HeaderMenu } from '@/components/ui/HeaderMenu'
-import { HelpPopover } from '@/components/ui/HelpPopover'
 import { Loader2 } from 'lucide-react'
 import { useAppShellContext, useActiveWorkspace } from '@/context/AppShellContext'
 import { type PermissionsConfigFile } from '@craft-agent/shared/agent/modes'
@@ -27,6 +26,7 @@ import {
   SettingsCard,
 } from '@/components/settings'
 import { EditPopover, EditButton, getEditConfig } from '@/components/ui/EditPopover'
+import { getDocUrl } from '@craft-agent/shared/docs/doc-links'
 import { routes } from '@/lib/navigate'
 import type { DetailsPageMeta } from '@/lib/navigation-registry'
 
@@ -193,17 +193,40 @@ export default function PermissionsSettingsPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <PanelHeader title="Permissions" actions={<><HelpPopover feature="permissions" /><HeaderMenu route={routes.view.settings('permissions')} /></>} />
+      <PanelHeader title="Permissions" actions={<HeaderMenu route={routes.view.settings('permissions')} helpFeature="permissions" />} />
       <div className="flex-1 min-h-0 mask-fade-y">
         <ScrollArea className="h-full">
           <div className="px-5 py-7 max-w-3xl mx-auto">
-            <div className="space-y-6">
+            <div className="space-y-8">
               {isLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                 </div>
               ) : (
                 <>
+                  {/* About Section */}
+                  <SettingsSection title="About Permissions">
+                    <SettingsCard className="px-4 py-3.5">
+                      <div className="text-sm text-muted-foreground leading-relaxed space-y-1.5">
+                        <p>
+                          Permissions control how much autonomy your agent has. In <span className="text-foreground/80 font-medium">Explore</span> mode, the agent can only read and research — perfect for understanding a problem before committing to changes. When you're ready, switch to <span className="text-foreground/80 font-medium">Execute</span> mode to let the agent implement the plan autonomously.
+                        </p>
+                        <p>
+                          A good workflow: start in Explore to let the agent investigate, review the proposed plan, then execute with confidence.
+                        </p>
+                        <p>
+                          <button
+                            type="button"
+                            onClick={() => window.electronAPI?.openUrl(getDocUrl('permissions'))}
+                            className="text-foreground/70 hover:text-foreground underline underline-offset-2"
+                          >
+                            Learn more
+                          </button>
+                        </p>
+                      </div>
+                    </SettingsCard>
+                  </SettingsSection>
+
                   {/* Default Permissions Section */}
                   <SettingsSection
                     title="Default Permissions"

@@ -23,19 +23,23 @@ export interface GenericOverlayProps {
   onClose: () => void
   /** Optional title to display in the header */
   title?: string
+  /** Theme mode for dark/light styling (defaults to 'light') */
+  theme?: 'light' | 'dark'
   /** Enable diff mode for side-by-side comparison */
   diffMode?: boolean
   /** Original content (left side) for diff mode */
   originalContent?: string
   /** Modified content (right side) for diff mode */
   modifiedContent?: string
+  /** Render inline without dialog (for playground) */
+  embedded?: boolean
 }
 
 /**
  * Auto-detect language from content patterns.
  * Checks for JSON, code blocks, then defaults to markdown.
  */
-function detectLanguage(content: string): string {
+export function detectLanguage(content: string): string {
   const trimmed = content.trim()
 
   // Check for JSON - starts with { or [ and looks like valid JSON structure
@@ -110,9 +114,11 @@ export function GenericOverlay({
   isOpen,
   onClose,
   title = 'Preview',
+  theme,
   diffMode = false,
   originalContent = '',
   modifiedContent = '',
+  embedded,
 }: GenericOverlayProps) {
   // Auto-detect language if not provided
   const detectedLanguage = useMemo(() => {
@@ -129,12 +135,14 @@ export function GenericOverlay({
     <PreviewOverlay
       isOpen={isOpen}
       onClose={onClose}
+      theme={theme}
       badge={{
         icon: FileCode,
         label: detectedLanguage,
         variant: 'gray',
       }}
       title={title}
+      embedded={embedded}
     >
       <div className="absolute inset-0 overflow-auto p-4">
         {diffMode ? (
@@ -142,22 +150,22 @@ export function GenericOverlay({
           <div className="flex gap-4 h-full">
             <div className="flex-1 flex flex-col min-w-0">
               <div className="text-xs text-muted-foreground mb-2 font-medium">Original</div>
-              <div className="flex-1 overflow-auto rounded-lg border bg-muted/20 p-4">
-                <CodeBlock code={originalContent} language={detectedLanguage} mode="minimal" />
+              <div className="flex-1 overflow-auto p-4">
+                <CodeBlock code={originalContent} language={detectedLanguage} mode="minimal" forcedTheme={theme} />
               </div>
             </div>
             <div className="flex-1 flex flex-col min-w-0">
               <div className="text-xs text-muted-foreground mb-2 font-medium">Modified</div>
-              <div className="flex-1 overflow-auto rounded-lg border bg-muted/20 p-4">
-                <CodeBlock code={modifiedContent} language={detectedLanguage} mode="minimal" />
+              <div className="flex-1 overflow-auto p-4">
+                <CodeBlock code={modifiedContent} language={detectedLanguage} mode="minimal" forcedTheme={theme} />
               </div>
             </div>
           </div>
         ) : (
           // Single content view
           // Note: No h-full - content grows naturally and outer container scrolls
-          <div className="rounded-lg border bg-muted/20 p-4">
-            <CodeBlock code={content} language={detectedLanguage} mode="minimal" />
+          <div className="p-4">
+            <CodeBlock code={content} language={detectedLanguage} mode="minimal" forcedTheme={theme} />
           </div>
         )}
       </div>
